@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EN-Risk 자연재해 평가 보고서</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+<style>
+    :root {
+        --primary: #1a6fb4;
+        --secondary: #f4f6f8;
+        --border: #e1e4e8;
+        --text-main: #222;
+        --text-sub: #555;
+        
+        /* Risk Colors */
+        --c-verylow: #e3f2fd; --t-verylow: #1565c0;
+        --c-low: #bbdefb;     --t-low: #0d47a1;
+        --c-medium: #fff9c4;  --t-medium: #fbc02d;
+        --c-high: #ffccbc;    --t-high: #d84315;
+        --c-extreme: #ffcdd2; --t-extreme: #b71c1c;
+    }
+
+    body { font-family: 'Pretendard', sans-serif; margin: 0; padding: 40px; background: #f9f9f9; color: var(--text-main); line-height: 1.6; }
+    
+    .container { max-width: 950px; margin: 0 auto; background: #fff; padding: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-radius: 12px; }
+
+    h1 { font-size: 28px; margin: 0 0 10px 0; font-weight: 800; color: #111; letter-spacing: -0.5px; }
+    .subtitle { font-size: 14px; color: #888; margin-bottom: 40px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; display: flex; justify-content: space-between; }
+
+    /* Section Styles */
+    .section-title { font-size: 20px; font-weight: 700; margin-top: 60px; margin-bottom: 20px; display: flex; align-items: center; color: #333; }
+    .section-title::before { content: ''; display: block; width: 6px; height: 24px; background: var(--primary); margin-right: 12px; border-radius: 2px; }
+
+    /* Input Section */
+    .input-group { background: var(--secondary); padding: 30px; border-radius: 8px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .input-item { display: flex; flex-direction: column; }
+    .input-item label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-sub); }
+    .input-item input { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; font-family: inherit; transition: border 0.2s; }
+    .input-item input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 111, 180, 0.1); }
+    .full-width { grid-column: span 2; }
+
+    /* Buttons */
+    .btn-area { margin-top: 25px; text-align: center; }
+    button { padding: 14px 35px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; font-family: inherit; }
+    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 6px rgba(26, 111, 180, 0.2); }
+    .btn-primary:hover { background: #155a93; transform: translateY(-2px); }
+    .btn-secondary { background: #e0e0e0; color: #333; margin-right: 10px; }
+    .btn-secondary:hover { background: #d0d0d0; }
+
+    /* Report Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; table-layout: fixed; }
+    th, td { border-bottom: 1px solid var(--border); padding: 16px 12px; text-align: left; }
+    th { background: #f8f9fa; font-weight: 700; color: #444; border-top: 2px solid #333; }
+    
+    /* Risk Badges */
+    .badge { padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 12px; display: inline-block; text-align: center; letter-spacing: 0.5px; }
+    .badge.VERY-LOW { background: var(--c-verylow); color: var(--t-verylow); }
+    .badge.LOW { background: var(--c-low); color: var(--t-low); }
+    .badge.MEDIUM { background: var(--c-medium); color: var(--t-medium); }
+    .badge.HIGH { background: var(--c-high); color: var(--t-high); }
+    .badge.EXTREME { background: var(--c-extreme); color: var(--t-extreme); }
+
+    /* Risk Bar Visual */
+    .risk-bar-wrapper { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #eee; width: 100%; margin-top: 5px; }
+    .risk-segment { flex: 1; border-right: 2px solid #fff; opacity: 0.2; transition: opacity 0.3s; }
+    .risk-segment:last-child { border-right: none; }
+    
+    /* Active Segments */
+    .risk-bar-wrapper[data-level="VERY LOW"] .s1 { background: #2196f3; opacity: 1; }
+    .risk-bar-wrapper[data-level="LOW"] .s1, 
+    .risk-bar-wrapper[data-level="LOW"] .s2 { background: #4caf50; opacity: 1; }
+    .risk-bar-wrapper[data-level="MEDIUM"] .s1,
+    .risk-bar-wrapper[data-level="MEDIUM"] .s2,
+    .risk-bar-wrapper[data-level="MEDIUM"] .s3 { background: #ffeb3b; opacity: 1; }
+    .risk-bar-wrapper[data-level="HIGH"] .s1,
+    .risk-bar-wrapper[data-level="HIGH"] .s2,
+    .risk-bar-wrapper[data-level="HIGH"] .s3,
+    .risk-bar-wrapper[data-level="HIGH"] .s4 { background: #ff9800; opacity: 1; }
+    .risk-bar-wrapper[data-level="EXTREME"] .s1,
+    .risk-bar-wrapper[data-level="EXTREME"] .s2,
+    .risk-bar-wrapper[data-level="EXTREME"] .s3,
+    .risk-bar-wrapper[data-level="EXTREME"] .s4,
+    .risk-bar-wrapper[data-level="EXTREME"] .s5 { background: #f44336; opacity: 1; }
+
+    /* Analysis Box */
+    .analysis-box { background: #fafafa; border-left: 4px solid #ccc; padding: 25px; margin-bottom: 25px; border-radius: 0 8px 8px 0; }
+    .analysis-box h3 { margin: 0 0 12px 0; font-size: 16px; color: #222; font-weight: 700; display: flex; align-items: center; }
+    .analysis-box p { margin: 0; font-size: 15px; color: #444; text-align: justify; }
+
+    /* Engineering Opinion Box */
+    .eng-opinion-box { background: #fff; border: 1px solid #ddd; padding: 30px; border-left: 5px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .eng-opinion-text { font-size: 15px; color: #333; line-height: 1.8; text-align: justify; }
+
+    /* Summary Box */
+    .exec-summary { background: #eff3f6; border: 1px solid #dbe3e9; padding: 25px; border-radius: 8px; margin-bottom: 50px; }
+    .exec-summary h3 { margin-top: 0; color: #2c3e50; font-size: 18px; }
+
+    /* Professional Terms Highlight */
+    .tech-term { font-weight: 700; color: #333; background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; margin: 0 2px; }
+    .diff-high { color: #d32f2f; font-weight: 700; }
+    .diff-low { color: #1976d2; font-weight: 700; }
+
+    /* Print Optimization */
+    @media print {
+        body { padding: 0; background: #fff; }
+        .container { box-shadow: none; max-width: 100%; padding: 0; }
+        .no-print, .input-group, .btn-area { display: none !important; }
+        .section-title { margin-top: 30px; }
+        table { page-break-inside: avoid; }
+        .analysis-box, .eng-opinion-box { page-break-inside: avoid; border: 1px solid #ddd; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>EN-Risk Natural Hazard Assessment Report</h1>
+    <div class="subtitle">
+        <span>Prepared by <b>O&M Risk Analysis Team</b></span>
+        <span id="report-date"></span>
+    </div>
+
+    <div class="no-print">
+        <h2 class="section-title">Ⅰ. 입력값 설정 (Input Parameters)</h2>
+        <div class="input-group">
+            <div class="input-item full-width">
+                <label>발전소 명칭</label>
+                <input id="site_name" placeholder="예: 영암 F1 태양광발전소">
+            </div>
+            <div class="input-item">
+                <label>최대 풍속 (m/s)</label>
+                <input type="number" id="wind_value" placeholder="예: 21.5">
+            </div>
+            <div class="input-item">
+                <label>최심신적설 (cm)</label>
+                <input type="number" id="snow_value" placeholder="예: 19.3">
+            </div>
+            <div class="input-item">
+                <label>일일 최대 강우량 (mm/day)</label>
+                <input type="number" id="rainD_value" placeholder="예: 128.8">
+            </div>
+            <div class="input-item">
+                <label>1시간 최대 강우량 (mm/h)</label>
+                <input type="number" id="rain1_value" placeholder="예: 63.3">
+            </div>
+        </div>
+
+        <div class="btn-area">
+            <button class="btn-secondary" onclick="fillExampleData()">🎲 랜덤 샘플 데이터</button>
+            <button class="btn-primary" onclick="renderReport()">📊 보고서 생성하기</button>
+        </div>
+        <hr style="margin: 50px 0; border: none; border-top: 1px dashed #ddd;">
+    </div>
+
+    <div id="generated_report" style="display:none;">
+        
+        <div id="executive_summary" class="exec-summary"></div>
+
+        <h2 class="section-title">Ⅱ. 자연재해 리스크 정량 평가</h2>
+        <table id="risk-table">
+            <thead>
+                <tr>
+                    <th width="15%">구분 (Hazard)</th>
+                    <th width="15%">입력값</th>
+                    <th width="20%">위험도 (Level)</th>
+                    <th width="20%">리스크 지표 (Visual)</th>
+                    <th width="30%">요약 평가</th>
+                </tr>
+            </thead>
+            <tbody id="risk-table-body"></tbody>
+        </table>
+
+        <h2 class="section-title">Ⅲ. 위험요소별 상세 분석 및 제안</h2>
+        <div id="detail-analysis"></div>
+
+        <h2 class="section-title">Ⅳ. 종합 엔지니어링 소견 (Engineering Opinion)</h2>
+        <div class="eng-opinion-box">
+            <div id="extended-analysis" class="eng-opinion-text"></div>
+        </div>
+
+        <div style="margin-top:50px; text-align:center; font-size:12px; color:#999; line-height:1.5;">
+            * 본 보고서의 비교 지표는 기상청 30년 평년값(1991~2020) 통계를 Baseline으로 산정하였습니다.<br>
+            * 제시된 소견은 예비 타당성 검토(Feasibility Study) 단계의 참고 자료이며, 실시 설계 시에는 전문 업체의 지반 조사 및 구조 검토서가 우선합니다.
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==================== CONFIGURATION ==================== */
+const KMA_BASE = {
+    WIND: 11.6,       // m/s
+    RAIN_DAILY: 133.3,// mm
+    RAIN_1H: 44.6,    // mm
+    SNOW: 20.2        // cm
+};
+
+document.getElementById('report-date').innerText = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+/* ==================== LOGIC FUNCTIONS ==================== */
+
+function determineLevel(type, value) {
+    const v = parseFloat(value);
+    const thresholds = {
+        "Wind":      [8, 14, 20, 28],
+        "RainDaily": [30, 80, 150, 250],
+        "Rain1h":    [10, 25, 60, 90],
+        "Snow":      [8, 20, 40, 60]
+    };
+
+    const t = thresholds[type];
+    if(v > t[3]) return "EXTREME";
+    if(v > t[2]) return "HIGH";
+    if(v > t[1]) return "MEDIUM";
+    if(v > t[0]) return "LOW";
+    return "VERY LOW";
+}
+
+/* 전문적인 비교 텍스트 생성기 (단순 % 대신 용어 사용) */
+function getProfessionalDiffHTML(val, base, unit) {
+    const diff = val - base;
+    const ratio = (val / base).toFixed(2); // 배수 (예: 1.5배)
+    const pct = ((diff / base) * 100).toFixed(1); // 백분율
+    
+    let term = "";
+    let cssClass = "";
+    let sign = diff > 0 ? "+" : "";
+
+    if (diff > 0) {
+        cssClass = "diff-high";
+        // 값이 클 경우 '초과(Exceedance)', 작을 경우 '상승(Increase)' 등의 용어 혼용
+        term = `<span class="${cssClass}">평년 편차율 ${sign}${pct}% (강도 비 ${ratio})</span>`;
+    } else {
+        cssClass = "diff-low";
+        term = `<span class="${cssClass}">평년 편차율 ${pct}% (강도 비 ${ratio})</span>`;
+    }
+    
+    return `${term} <span style="font-size:12px; color:#888;">*평균 ${base}${unit} 기준</span>`;
+}
+
+/* ==================== RENDERING HELPERS ==================== */
+
+function generateVisualBar(level) {
+    const safeLevel = level.replace("-", " "); 
+    return `
+    <div class="risk-bar-wrapper" data-level="${safeLevel}">
+        <div class="risk-segment s1"></div>
+        <div class="risk-segment s2"></div>
+        <div class="risk-segment s3"></div>
+        <div class="risk-segment s4"></div>
+        <div class="risk-segment s5"></div>
+    </div>`;
+}
+
+function getSummaryText(type, level) {
+    const map = {
+        "Wind": { "EXTREME":"구조물 파손 임계치 초과", "HIGH":"내풍 안정성 검토 필요", "MEDIUM":"일반 하중 조건", "LOW":"안전 범위", "VERY LOW":"영향 미미" },
+        "RainDaily": { "EXTREME":"사면 슬라이딩 위험", "HIGH":"배수 용량 부족 우려", "MEDIUM":"일반 관리 수준", "LOW":"안전 범위", "VERY LOW":"영향 미미" },
+        "Rain1h": { "EXTREME":"돌발 홍수(Flash Flood)", "HIGH":"침수 가능성 높음", "MEDIUM":"일반 관리 수준", "LOW":"안전 범위", "VERY LOW":"영향 미미" },
+        "Snow": { "EXTREME":"구조물 붕괴 하중", "HIGH":"제설 대책 수립 필수", "MEDIUM":"일반 적설 하중", "LOW":"안전 범위", "VERY LOW":"자연 융설 가능" }
+    };
+    return map[type][level] || map[type]["VERY LOW"] || "평가 중";
+}
+
+/* ==================== ANALYTICS TEXT GENERATOR ==================== */
+
+function generateDetailAnalysis(type, level, val, base, unit) {
+    const diffHTML = getProfessionalDiffHTML(val, base, unit);
+    const isHighRisk = (level === "HIGH" || level === "EXTREME");
+    
+    let title = "", content = "";
+    
+    if(type === "Wind") {
+        title = "■ 풍하중 및 내풍 설계 적정성 (Wind Load Analysis)";
+        content = `대상 부지의 설계 기준 풍속은 <b>${val}m/s</b>로 입력되었으며, 이는 ${diffHTML}에 해당합니다. <br><br>`;
+        
+        if(isHighRisk) {
+            content += `현재 풍속은 구조물의 <span class="tech-term">한계 상태(Limit State)</span>를 위협할 수 있는 수준입니다. 모듈의 체결력(Clamping Force)이 설계 하중을 만족하는지 확인하고, 구조물 단부 및 모서리 영역(Edge/Corner Zone)에 대한 <span class="tech-term">보강 브레이싱(Bracing)</span> 설치를 강력히 제안합니다.`;
+        } else {
+            content += `일반적인 구조 설계 기준(KBC/KDS) 범위 내에 존재합니다. 단, 국지적 돌풍 계수(Gust Factor)를 고려하여 주요 볼트 체결부의 풀림 방지 너트 적용 여부를 주기적으로 점검하시기 바랍니다.`;
+        }
+    } 
+    else if(type === "RainDaily") {
+        title = "■ 수문학적 안정성 및 배수 계획 (Hydrological Stability)";
+        content = `일일 최대 강우량 <b>${val}mm</b>는 ${diffHTML} 수치입니다. 이는 토양의 <span class="tech-term">포화도(Degree of Saturation)</span>와 직결됩니다.<br><br>`;
+        
+        if(isHighRisk) {
+            content += `지반의 전단 강도(Shear Strength) 저하로 인한 <span class="tech-term">사면 활동(Slope Failure)</span> 가능성이 높습니다. 절토 및 성토 구간의 법면 보호공(Seed Spray, Geogrid 등) 상태를 재평가하고, 산마루 측구의 통수 단면적을 설계 기준 대비 1.2배 이상 확보할 것을 제안합니다.`;
+        } else {
+            content += `기존 배수 시스템으로 감당 가능한 수준의 강우량입니다. 다만, 장기적인 침식 방지를 위해 우기 전 배수로 내 퇴적토 준설 및 잡목 제거 작업을 포함한 <span class="tech-term">예방적 유지관리(Preventive Maintenance)</span> 계획을 수립하십시오.`;
+        }
+    }
+    else if(type === "Rain1h") {
+        title = "■ 돌발 홍수 및 침수 리스크 (Flash Flood Risk)";
+        content = `시간당 집중 호우량 <b>${val}mm</b>는 ${diffHTML} 수준으로 분석되었습니다.<br><br>`;
+        
+        if(isHighRisk) {
+            content += `단시간 집중 호우로 인한 <span class="tech-term">표면 유출수(Surface Runoff)</span>가 급증할 수 있습니다. 부지 내 저류조(Detention Pond)의 용량 적정성을 재검토하고, 주요 전기 설비(인버터, 수배전반)의 기초 패드 높이(Level)를 지면(G.L.)으로부터 충분히 이격시켜 침수 피해를 예방해야 합니다.`;
+        } else {
+            content += `순간적인 배수 부하에는 큰 문제가 없을 것으로 판단됩니다. 다만, 부지 내 저지대(Low-lying Area)의 자연 배수 흐름이 원활한지 확인하고 우수 관로의 막힘 여부를 점검하는 것으로 충분합니다.`;
+        }
+    }
+    else if(type === "Snow") {
+        title = "■ 적설 하중 및 구조물 변형 (Snow Load Impact)";
+        content = `최심신적설 <b>${val}cm</b>는 ${diffHTML}에 해당하며, 적설 하중 검토가 필요합니다.<br><br>`;
+        
+        if(isHighRisk) {
+            content += `습설(Wet Snow) 조건에서는 단위 중량이 증가하여 구조물에 <span class="tech-term">영구 변형(Permanent Deformation)</span>을 초래할 수 있습니다. 모듈 경사각을 이용한 자연 활설(Sliding) 유도 가능성을 확인하고, 폭설 예보 시 현장 제설 프로세스를 즉각 가동할 수 있는 비상 대응 체계를 제안합니다.`;
+        } else {
+            content += `구조적 안전율 내에서 충분히 지지 가능한 적설량입니다. 구조물 안전보다는 적설로 인한 음영(Shading) 발생 및 발전 효율 저하 방지에 초점을 맞춘 동절기 운용 계획이 필요합니다.`;
+        }
+    }
+
+    return `<div class="analysis-box"><h3>${title}</h3><p>${content}</p></div>`;
+}
+
+function generateExecutiveSummary(levels) {
+    const dangerCount = Object.values(levels).filter(l => l === "HIGH" || l === "EXTREME").length;
+    let text = "";
+    
+    if(dangerCount >= 3) {
+        text = `🚨 <b>[Critical] 복합 자연재해 취약 지역 (Multi-Hazard High Risk)</b><br>3개 이상의 항목이 임계치를 초과하여 구조적/수리적 리스크가 중첩되어 있습니다. 즉각적인 정밀 안전 진단 및 보강 대책이 요구됩니다.`;
+    } else if (dangerCount > 0) {
+        const risks = Object.entries(levels).filter(([k,v]) => v==="HIGH"||v==="EXTREME").map(([k,v]) => k);
+        text = `⚠️ <b>[Caution] 특정 재해 요소 집중 관리 필요</b><br>특히 <b>${risks.join(", ")}</b> 항목의 위험도가 높게 평가되었습니다. 해당 요소에 대한 선택적 집중 보강(Targeted Retrofitting)을 권장합니다.`;
+    } else {
+        text = `✅ <b>[Stable] 자연재해 안전 입지 (Low Risk Area)</b><br>분석된 모든 기상 요소가 표준 설계 허용 범위 내에 있습니다. 통상적인 O&M 절차에 따른 운영이 가능합니다.`;
+    }
+    
+    return `<h3>📊 Executive Summary</h3><p style="margin:0;">${text}</p>`;
+}
+
+/* ==================== COMPREHENSIVE ENGINEERING OPINION (LOGIC UPDATED) ==================== */
+
+function generateProfessionalOpinion(site, levels, vals) {
+    // 1. 전체적인 리스크 프로파일링
+    const riskLevels = Object.values(levels);
+    const maxRisk = riskLevels.includes("EXTREME") ? "EXTREME" : (riskLevels.includes("HIGH") ? "HIGH" : "NORMAL");
+    
+    let paragraph1 = "";
+    let paragraph2 = "";
+    let paragraph3 = "";
+
+    // P1. 개요 및 상태 정의
+    if (maxRisk === "EXTREME") {
+        paragraph1 = `본 평가는 <b>${site}</b>의 기상 수문학적 데이터를 바탕으로 수행되었으며, 분석 결과 대상 부지는 <span class="tech-term" style="color:#c62828">극한 기후 노출(Extreme Weather Exposure)</span> 위험도가 매우 높은 것으로 식별되었습니다. 특히 일부 항목은 설계 재현 주기(Return Period) 내의 최대값을 상회할 가능성이 있어 구조물의 안전율(Safety Factor) 재산정이 시급합니다.`;
+    } else if (maxRisk === "HIGH") {
+        paragraph1 = `<b>${site}</b>에 대한 자연재해 리스크 평가 결과, 전반적인 입지 여건은 양호하나 특정 기상 요소에 대해 <span class="tech-term" style="color:#ef6c00">주의(Cautionary)</span> 단계의 관리가 요구됩니다. 이는 표준 설계 기준을 충족하더라도 기후 변화로 인한 불확실성(Uncertainty)을 고려했을 때 잠재적 리스크가 존재함을 시사합니다.`;
+    } else {
+        paragraph1 = `<b>${site}</b>의 기상 데이터는 대한민국 기후 평년값 범위 내에서 안정적인 분포를 보이고 있습니다. 공학적 관점에서 볼 때, 현재의 설계 및 시공 기준만으로도 충분한 <span class="tech-term" style="color:#2e7d32">구조적 건전성(Structural Integrity)</span> 확보가 가능한 것으로 판단됩니다.`;
+    }
+
+    // P2. 기술적 제안 (Technical Recommendation)
+    if (maxRisk === "EXTREME" || maxRisk === "HIGH") {
+        paragraph2 = `엔지니어링 측면에서 가장 우선순위를 두어야 할 사항은 <b>취약 구간의 구조 보강</b> 및 <b>배수 체계의 고도화</b>입니다. 단순한 사후 유지보수(Corrective Maintenance) 전략으로는 자산 가치를 보존하기 어려우므로, 리스크가 식별된 항목(상기 High/Extreme 등급)에 대해서는 전문 구조 기술사의 검토를 통해 <span class="tech-term">보강 설계를 적용(Retrofitting Design)</span>하거나, 재해 방지 시설의 용량을 설계 기준 대비 120% 이상으로 상향 조정할 것을 강력히 권고합니다.`;
+    } else {
+        paragraph2 = `현재 수준에서는 과도한 설비 투자보다는 <span class="tech-term">예방적 점검 체계(Preventive Inspection System)</span> 확립에 집중하는 것이 경제적입니다. 분기별 정기 점검 시 볼트 체결 토크 값 확인, 배수로 통수 능력 점검, 사면 인장 균열 여부 확인 등을 체크리스트화하여 관리하시기 바랍니다.`;
+    }
+
+    // P3. 결론
+    paragraph3 = `결론적으로, 본 부지는 ${maxRisk === "EXTREME" ? "특단의 방재 대책 수립이 선행되어야 사업의 지속 가능성을 담보할 수 있습니다." : (maxRisk === "HIGH" ? "식별된 리스크 요인에 대한 선제적 대응책 마련 시 안정적인 발전소 운영이 가능합니다." : "자연재해로 인한 중대 사고 발생 가능성은 낮으나, 기본적인 시설물 안전 관리 규정을 준수하시기 바랍니다.")}`;
+
+    return `${paragraph1}<br><br>${paragraph2}<br><br>${paragraph3}`;
+}
+
+
+/* ==================== MAIN ACTION ==================== */
+
+// 수정된 랜덤 샘플 데이터 생성 함수
+function fillExampleData() {
+    // 1. 랜덤 숫자 생성 헬퍼 (범위: 0 ~ Base값 * 2.5)
+    // Base * 2.5를 하면 +150%까지 커버됨 (100% + 150% = 250% = 2.5배)
+    function getRandomVal(base) {
+        const max = base * 2.5; 
+        const random = Math.random() * max;
+        return random.toFixed(1);
+    }
+
+    // 2. 값 주입
+    const randomId = Math.floor(Math.random() * 99) + 1;
+    document.getElementById("site_name").value = `랜덤 시뮬레이션 발전소 ${randomId}호`;
+    document.getElementById("wind_value").value = getRandomVal(KMA_BASE.WIND);
+    document.getElementById("rainD_value").value = getRandomVal(KMA_BASE.RAIN_DAILY);
+    document.getElementById("rain1_value").value = getRandomVal(KMA_BASE.RAIN_1H);
+    document.getElementById("snow_value").value = getRandomVal(KMA_BASE.SNOW);
+}
+
+function renderReport(){
+    // 1. Get Values
+    const site = document.getElementById("site_name").value || "미지정 발전소";
+    const vWind = document.getElementById("wind_value").value;
+    const vRainD = document.getElementById("rainD_value").value;
+    const vRain1 = document.getElementById("rain1_value").value;
+    const vSnow = document.getElementById("snow_value").value;
+
+    // 2. Validation
+    if(!vWind || !vRainD || !vRain1 || !vSnow) {
+        alert("모든 기상 데이터를 입력해주세요.");
+        return;
+    }
+
+    const val = {
+        Wind: parseFloat(vWind),
+        RainDaily: parseFloat(vRainD),
+        Rain1h: parseFloat(vRain1),
+        Snow: parseFloat(vSnow)
+    };
+
+    // 3. Calc Levels
+    const levels = {
+        Wind: determineLevel("Wind", val.Wind),
+        RainDaily: determineLevel("RainDaily", val.RainDaily),
+        Rain1h: determineLevel("Rain1h", val.Rain1h),
+        Snow: determineLevel("Snow", val.Snow)
+    };
+
+    // 4. Render Table
+    const tbody = document.getElementById("risk-table-body");
+    let trs = "";
+    const items = [
+        { key: "Wind", label: "Wind (풍속)", unit: "m/s" },
+        { key: "RainDaily", label: "Daily Rain (일 강우)", unit: "mm" },
+        { key: "Rain1h", label: "1h Rain (시 강우)", unit: "mm" },
+        { key: "Snow", label: "Snow (적설)", unit: "cm" }
+    ];
+
+    items.forEach(item => {
+        const lvl = levels[item.key];
+        const v = val[item.key];
+        const safeLvlClass = lvl.replace(" ", "-"); 
+        
+        trs += `<tr>
+            <td><b>${item.label}</b></td>
+            <td>${v} ${item.unit}</td>
+            <td><span class="badge ${safeLvlClass}">${lvl}</span></td>
+            <td>${generateVisualBar(lvl)}</td>
+            <td>${getSummaryText(item.key, lvl)}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = trs;
+
+    // 5. Render Executive Summary
+    document.getElementById("executive_summary").innerHTML = generateExecutiveSummary(levels);
+
+    // 6. Render Detail Analysis
+    let details = "";
+    details += generateDetailAnalysis("Wind", levels.Wind, val.Wind, KMA_BASE.WIND, "m/s");
+    details += generateDetailAnalysis("RainDaily", levels.RainDaily, val.RainDaily, KMA_BASE.RAIN_DAILY, "mm");
+    details += generateDetailAnalysis("Rain1h", levels.Rain1h, val.Rain1h, KMA_BASE.RAIN_1H, "mm");
+    details += generateDetailAnalysis("Snow", levels.Snow, val.Snow, KMA_BASE.SNOW, "cm");
+    document.getElementById("detail-analysis").innerHTML = details;
+
+    // 7. Render Extended Opinion (전문적인 소견 생성 함수 호출)
+    document.getElementById("extended-analysis").innerHTML = generateProfessionalOpinion(site, levels, val);
+
+    // 8. Show Report
+    document.getElementById("generated_report").style.display = "block";
+    
+    // Scroll to report
+    setTimeout(() => {
+        document.getElementById("generated_report").scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+}
+</script>
+</body>
+</html>
